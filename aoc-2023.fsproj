@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>aoc_2023</RootNamespace>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="Input\input01" />
+        <Content Include="Input\input02" />
+        <Compile Include="Utility.fs" />
+        <Compile Include="Day01.fs" />
+        <Compile Include="Day02.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+</Project>

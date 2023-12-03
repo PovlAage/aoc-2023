@@ -48,32 +48,20 @@ let parse lines =
         loop [] 0
     lines |> List.indexed |> List.map (fun (lineNo, line) -> parseLine lineNo line) |> List.concat
 
+let isNeighbour p (Number (n, len, point)) =
+    let y, x = point
+    let py, px = p
+    y - 1 <= py && py <= y + 1 && x - 1 <= px && px <= x + len 
+
 let resultA input =
     let numbers = input |> List.choose (fun e -> match e with Number _ -> Some e | _ -> None)
     let symbolPoints = input |> List.choose (fun e -> match e with Symbol (s, p) -> Some p | _ -> None) |> Set.ofSeq
-    let hasSymbolNeighbour (Number (n, len, point)) =
-        let y, x = point
-        let closeSymbolPoints = symbolPoints |> Set.filter (fun p -> let sy = fst p in y - 1 <= sy && sy <= y + 1)
-        let neighbourPoints =
-            [for xx in [x-1..x+len] do (y-1, xx)] @
-            [(y, x-1); (y, x+len)] @
-            [for xx in [x-1..x+len] do (y+1, xx)] |> Set.ofList
-        not (Set.isEmpty (Set.intersect closeSymbolPoints neighbourPoints))
+    let hasSymbolNeighbour (Number n) =
+        symbolPoints |> Set.exists (fun sp -> isNeighbour sp (Number n))
     numbers |> List.filter hasSymbolNeighbour |> List.sumBy (fun (Number (n, _, _)) -> n)      
 let resultB input =
     let numbers = input |> List.choose (fun e -> match e with Number _ -> Some e | _ -> None)
-    let isGearNeighbour gearPoint (Number (n, len, point)) =
-        let y, x = point
-        let gy, gx = gearPoint
-        if gy - 1 <= y && y <= gy + 1 then 
-            let neighbourPoints =
-                [for xx in [x-1..x+len] do (y-1, xx)] @
-                [(y, x-1); (y, x+len)] @
-                [for xx in [x-1..x+len] do (y+1, xx)] |> Set.ofList
-            Set.contains gearPoint neighbourPoints
-        else
-            false
-    let getNeighbours gearPoint = numbers |> List.filter (isGearNeighbour gearPoint) |> List.map (fun (Number (n, len, point)) -> n)
+    let getNeighbours gearPoint = numbers |> List.filter (isNeighbour gearPoint) |> List.map (fun (Number (n, len, point)) -> n)
     let gearsWithNeighbours =
         input |>
         List.choose (fun e -> match e with Symbol ('*', p) -> Some p | _ -> None) |>

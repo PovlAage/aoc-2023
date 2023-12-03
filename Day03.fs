@@ -53,21 +53,26 @@ let resultA input =
     let symbolPoints = input |> List.choose (fun e -> match e with Symbol (s, p) -> Some p | _ -> None) |> Set.ofSeq
     let hasSymbolNeighbour (Number (n, len, point)) =
         let y, x = point
+        let closeSymbolPoints = symbolPoints |> Set.filter (fun p -> let sy = fst p in y - 1 <= sy && sy <= y + 1)
         let neighbourPoints =
             [for xx in [x-1..x+len] do (y-1, xx)] @
             [(y, x-1); (y, x+len)] @
             [for xx in [x-1..x+len] do (y+1, xx)] |> Set.ofList
-        not (Set.isEmpty (Set.intersect symbolPoints neighbourPoints))
+        not (Set.isEmpty (Set.intersect closeSymbolPoints neighbourPoints))
     numbers |> List.filter hasSymbolNeighbour |> List.sumBy (fun (Number (n, _, _)) -> n)      
 let resultB input =
     let numbers = input |> List.choose (fun e -> match e with Number _ -> Some e | _ -> None)
     let isGearNeighbour gearPoint (Number (n, len, point)) =
         let y, x = point
-        let neighbourPoints =
-            [for xx in [x-1..x+len] do (y-1, xx)] @
-            [(y, x-1); (y, x+len)] @
-            [for xx in [x-1..x+len] do (y+1, xx)] |> Set.ofList
-        Set.contains gearPoint neighbourPoints
+        let gy, gx = gearPoint
+        if gy - 1 <= y && y <= gy + 1 then 
+            let neighbourPoints =
+                [for xx in [x-1..x+len] do (y-1, xx)] @
+                [(y, x-1); (y, x+len)] @
+                [for xx in [x-1..x+len] do (y+1, xx)] |> Set.ofList
+            Set.contains gearPoint neighbourPoints
+        else
+            false
     let getNeighbours gearPoint = numbers |> List.filter (isGearNeighbour gearPoint) |> List.map (fun (Number (n, len, point)) -> n)
     let gearsWithNeighbours =
         input |>

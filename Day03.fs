@@ -4,70 +4,61 @@ open Utility
 let day = 3
 
 type Point = int * int
-type Number = int * int * Point
-type Symbol = char * Point
 type Element =
-    | Number of Number
-    | Symbol of Symbol
+    | Number of int * int * Point
+    | Symbol of char * Point
 type Diagram = Element list
 let parse lines =
     let reBlanks = System.Text.RegularExpressions.Regex(@"^\.+")
     let reNumber = System.Text.RegularExpressions.Regex(@"^\d+")
     let reSymbol = System.Text.RegularExpressions.Regex(@"^.")
+
     let parseLine lineNo (line:string) =
         let rec loop acc pos =
             let point = (lineNo, pos)
             let tryParseBlanks =
                 let m = reBlanks.Match(line.Substring(pos))
-                if m.Success then
-                    Some m.Length
-                else
-                    None
-            let tryParseNumber =
+                if m.Success then Some m.Length else None
+            let tryParseElement =
                 let m = reNumber.Match(line.Substring(pos))
                 if m.Success then
                     Some (m.Length, (Number (Int32.Parse(m.Value), m.Length, point)))
                 else
-                    None
-            let tryParseSymbol =
-                let m = reSymbol.Match(line.Substring(pos))
-                if m.Success then
-                    Some (m.Length, (Symbol (m.Value[0], point)))
-                else
-                    None
+                    let m = reSymbol.Match(line.Substring(pos))
+                    if m.Success then Some (m.Length, (Symbol (m.Value[0], point))) else None
             if pos = line.Length then
                 List.rev acc
             else
                 match tryParseBlanks with
                 | Some l -> loop acc (pos + l)
-                | None -> match tryParseNumber with
-                            | Some (len, n) -> loop (n :: acc) (pos + len)
-                            | None -> match tryParseSymbol with
-                                        | Some (len, s) -> loop (s :: acc) (pos + len)
-                                        | None -> failwithf $"Could not match at {line.Substring(pos)}"
+                | None -> match tryParseElement with
+                            | Some (len, e) -> loop (e :: acc) (pos + len)
+                            | None -> failwithf $"Could not match at {line.Substring(pos)}"
         loop [] 0
     lines |> List.indexed |> List.map (fun (lineNo, line) -> parseLine lineNo line) |> List.concat
 
-let isNeighbour p (Number (n, len, point)) =
-    let y, x = point
+let isNeighbour p e =
     let py, px = p
-    y - 1 <= py && py <= y + 1 && x - 1 <= px && px <= x + len 
+    match e with
+    | Number(_, len, (y, x)) -> y - 1 <= py && py <= y + 1 && x - 1 <= px && px <= x + len
+    | Symbol(c, (y, x)) -> y - 1 <= py && py <= y + 1 && x - 1 <= px && px <= x + 1
 
 let resultA input =
     let numbers = input |> List.choose (fun e -> match e with Number _ -> Some e | _ -> None)
     let symbolPoints = input |> List.choose (fun e -> match e with Symbol (s, p) -> Some p | _ -> None) |> Set.ofSeq
-    let hasSymbolNeighbour (Number n) =
-        symbolPoints |> Set.exists (fun sp -> isNeighbour sp (Number n))
-    numbers |> List.filter hasSymbolNeighbour |> List.sumBy (fun (Number (n, _, _)) -> n)      
+    let hasSymbolNeighbour e =
+        symbolPoints |> Set.exists (fun sp -> isNeighbour sp e)
+    numbers |> List.filter hasSymbolNeighbour |> List.sumBy (fun (Number (n, _, _)) -> n)
+    
 let resultB input =
     let numbers = input |> List.choose (fun e -> match e with Number _ -> Some e | _ -> None)
-    let getNeighbours gearPoint = numbers |> List.filter (isNeighbour gearPoint) |> List.map (fun (Number (n, len, point)) -> n)
+    let getNeighbours gearPoint = numbers |> List.filter (isNeighbour gearPoint) |> List.map (fun (Number (n, _, _)) -> n)
     let gearsWithNeighbours =
         input |>
-        List.choose (fun e -> match e with Symbol ('*', p) -> Some p | _ -> None) |>
-        List.map (fun p -> (p, getNeighbours p)) |>
-        List.filter (fun (p, ns) -> List.length ns = 2)
-    gearsWithNeighbours |> List.sumBy (snd >> (List.reduce (*)))
+        List.choose (function Symbol ('*', p) -> Some (getNeighbours p) | _ -> None) |>
+        List.filter (fun ns -> ns.Length = 2)
+    gearsWithNeighbours |> List.sumBy (List.reduce (*))
+
 let run v =
     let sw = System.Diagnostics.Stopwatch.StartNew()
     printfn $"day {day}"
@@ -95,6 +86,5 @@ let run v =
         verify (resultB testInput) 467835
 
     verify (resultB input) 73646890
-
     
     printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

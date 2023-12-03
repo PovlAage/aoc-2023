@@ -63,6 +63,6 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
         verify (resultB testInput) 2286
 
     let input = inputLines day |> parseInput 
-    verify (resultB input) 0
+    verify (resultB input) 59795
 
     printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

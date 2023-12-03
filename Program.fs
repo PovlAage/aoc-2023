@@ -1,8 +1,8 @@
 ﻿module aoc_2023.Program
 
 Day01.run false
-Day02.run true
-// Day03.run true
+Day02.run false
+Day03.run true
 // Day04.run true
 // Day05.run true
 // Day06.run true

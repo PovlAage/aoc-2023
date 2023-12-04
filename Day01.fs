@@ -9,7 +9,7 @@ let resultA lines =
         let m = re.Matches(line)
         let first = m[0].Value
         let last = m[m.Count - 1].Value
-        Int32.Parse(first + last)
+        int(first + last)
     lines |> List.sumBy cvalue
 
 let resultB lines =
@@ -25,13 +25,13 @@ let resultB lines =
             | "seven" -> 7
             | "eight" -> 8
             | "nine" -> 9
-            | d -> Int32.Parse(d)
+            | d -> int d
             | s -> failwithf $"unexpected {s}"
         let m = re.Matches(line)
         let first = string(digit m[0].Groups[1].Value)
         let last = string(digit m[m.Count - 1].Groups[1].Value)
         // printfn $"{line}\t{first}+{last}"
-        Int32.Parse(first + last)
+        int (first + last)
     lines |> List.sumBy cvalue
 
 let run v =

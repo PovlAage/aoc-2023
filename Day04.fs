@@ -20,11 +20,12 @@ let resultB (cards: Card list) =
 let parse lines =
     let parseLine (line:string) =
         let opts = StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries
-        let [|scard; sWinningNumbers; sNumbersYouHave|] = line.Split([| ':' ; '|' |], opts)
-        let spacedNums (s:string) = s.Split(' ', opts) |> List.ofArray |> List.map (fun sn -> Int32.Parse(sn))
-        let [| _ ; scardno |] = scard.Split(' ', opts)
+        let scard, nums = split2 ':' line
+        let sWinningNumbers, sNumbersYouHave = split2 '|' nums
+        let spacedNums (s:string) = s.Split(' ', opts) |> List.ofArray |> List.map int
+        let _, scardno = split2space scard 
         let card = {
-            No = Int32.Parse(scardno)
+            No = int scardno
             WinningNumbers = spacedNums sWinningNumbers  
             MyNumbers = spacedNums sNumbersYouHave  
         }
@@ -45,14 +46,12 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 """
     let testInput = stestInput |> multiLineToList |> parse
     if v then
-        verify (resultA testInput) 24706
-    
+        verify (resultA testInput) 13
     let input = (inputLines day) |> parse
-    verify (resultA input) 0
+    verify (resultA input) 24706
     
     if v then
         verify (resultB testInput) 30
-    
     verify (resultB input) 13114317
     
     printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

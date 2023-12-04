@@ -1,5 +1,7 @@
 module aoc_2023.Utility
 
+open System
+
 let verify actual expected =
     if actual = expected then
         printfn $"OK {actual}"
@@ -30,3 +32,10 @@ let mapUnion<'a when 'a : comparison> (x:Map<'a, int>) (y:Map<'a, int>) =
     let maxOpt v1 v2 =
         max (Option.defaultValue 0 v1) (Option.defaultValue 0 v2)
     keysUnion |> Seq.map (fun k -> (k, maxOpt (Map.tryFind k x) (Map.tryFind k y))) |> Map.ofSeq
+
+let split2 (c:char) (s:string) =
+    match s.Split(c, StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries) with
+    | [| x ; y |] -> x, y
+    | _ -> failwithf $"Could not split {s} into two"
+
+let split2space = split2 ' '

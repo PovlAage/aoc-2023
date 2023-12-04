@@ -10,11 +10,11 @@ type Bag = Bag of Map<Color, int>
 
 let parseGame (line:string) =
     let opts = StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries
-    let [| sgameNo; shands |] = line.Split(':', opts)
-    let gameNo = Int32.Parse((sgameNo.Split(' ', opts)[1]).Trim())
+    let sgameNo, shands = line |> split2 ':' 
+    let gameNo = sgameNo |> split2space |> snd |> int
     let parseColorCount (s:string) =
-        let [| scount; scol |] = s.Split(' ', opts)
-        let count = Int32.Parse(scount)
+        let scount, scol = s |> split2space
+        let count = int scount
         let color = match scol with
                     | "red" -> Red
                     | "green" -> Green

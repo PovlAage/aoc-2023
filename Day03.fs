@@ -22,7 +22,7 @@ let parse lines =
             let tryParseElement =
                 let m = reNumber.Match(line.Substring(pos))
                 if m.Success then
-                    Some (m.Length, (Number (Int32.Parse(m.Value), m.Length, point)))
+                    Some (m.Length, (Number (int m.Value, m.Length, point)))
                 else
                     let m = reSymbol.Match(line.Substring(pos))
                     if m.Success then Some (m.Length, (Symbol (m.Value[0], point))) else None

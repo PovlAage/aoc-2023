@@ -5,6 +5,7 @@
         <RootNamespace>aoc_2023</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <OutputType>Exe</OutputType>
+        <LangVersion>latestmajor</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

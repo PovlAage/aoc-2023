@@ -3,47 +3,83 @@ open System
 open Utility
 let day = 5
 
+type Range = { Start: int64; End: int64 }
 type Seeds = Seeds of int64 list
-type MappingRange = { Source: int64; Destination: int64; Length: int64 }
-type Mapping = { Name: string; Mappings: MappingRange list }
-
-let map i (m:Mapping) =
-    let rec loop rest =
-        match rest with
-        | [] -> i
-        | mr :: rest ->
-            if mr.Source <= i && i < mr.Source + mr.Length then
-                mr.Destination + (i - mr.Source)
-            else
-                loop rest
-    let res = loop m.Mappings
-    // printfn $"{m.Name} maps {i} to {res}"
-    res
-
-let resultA (Seeds s, mappings: Mapping list) =
-    let folder is m = is |> List.map (fun i -> map i m)
-    mappings |> List.fold folder s |> List.min
-    
-let rec splitInts (s:string) =
-    s.Split(' ', StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries) |> List.ofArray |> List.map int64
+type MappingPart = { Source: int64; Destination: int64; Length: int64 }
+type Mapping = { Name: string; MappingParts: MappingPart list }
 
 let parseSeedsLine (seedsLine:string) =
     let _, sseeds = seedsLine |> split2 ':'
-    Seeds (splitInts sseeds)
-    
+    Seeds (splitInt64 sseeds)
+
 let parseMappingRange (line:string) =
-    match splitInts line with
+    match splitInt64 line with
     | [destination; source; length] -> { Source = source; Destination = destination; Length = length }
     | _ -> failwithf $"Could not parse mapping range {line}"
     
 let parseMapping (mappingChunk:string list) =
-    { Name = mappingChunk[0]; Mappings = mappingChunk[1..] |> List.map parseMappingRange }
+    { Name = mappingChunk[0]; MappingParts = mappingChunk[1..] |> List.map parseMappingRange }
     
 let parse (lines:string list) =
     let chunks = lines |> chunkLines
     let seedsLine = parseSeedsLine (chunks[0][0])
     let mappings = chunks[1..] |> List.map parseMapping
     (seedsLine, mappings)
+
+let range s e =
+    if e < s then failwithf "e<s: {e}<{s}"
+    { Start = s; End = e }
+let translate delta r = { Start = r.Start + delta; End = r.End + delta }
+let sourceRange mp = { Start = mp.Source; End = mp.Source + mp.Length - 1L }
+let overlap (r:Range) (mr:Range) =
+    if r.Start < mr.Start then
+        if r.End < mr.Start then
+            None, [r]            
+        elif r.End <= mr.End then
+            Some { Start = mr.Start; End = r.End }, [{ Start = r.Start; End = mr.Start - 1L }]
+        else
+            Some mr, [{ Start = r.Start; End = mr.Start - 1L }; { Start = mr.End + 1L; End = r.End }]
+    elif r.Start <= mr.End then
+        if r.End <= mr.End then
+            Some r, []
+        else
+            Some { Start = r.Start; End = mr.End }, [{ Start = mr.End + 1L; End = r.End }]
+    else
+        None, [r]
+
+let mapOne (mr:MappingPart) (rs:Range list) =
+    let rec loop acc rs =
+        match rs with
+        | [] -> acc
+        | r :: rs ->
+            let overlap, remainder = overlap r (sourceRange mr)
+            let mapped = match overlap with
+                            | Some overlap -> (translate (mr.Destination - mr.Source) overlap) :: fst acc
+                            | None -> fst acc
+            let unmapped = remainder @ snd acc
+            loop (mapped, unmapped) rs
+    loop ([], []) rs
+
+let map (rs:Range list) (m:Mapping) =
+    let rec loop acc mappingParts disjointInput =
+        match mappingParts, disjointInput with
+        | _, [] -> acc
+        | [], _ -> disjointInput @ acc
+        | mr :: mrs, _ ->
+            let mapped, unmapped = mapOne mr disjointInput
+            loop (mapped @ acc) mrs unmapped
+    loop [] m.MappingParts rs
+
+let resultA (Seeds seeds, mappings: Mapping list) =
+    let folder = map
+    let seedRanges = seeds |> List.map (fun s -> range s s)
+    mappings |> List.fold folder seedRanges |>List.map (fun r -> r.Start) |> List.min
+    
+let resultB (Seeds seeds, mappings: Mapping list) =
+    let folder = map
+    let seedRanges = [for i in 0..2..seeds.Length-1 -> range seeds[i] (seeds[i] + seeds[i+1] - 1L)]
+    mappings |> List.fold folder seedRanges |> List.map (fun r -> r.Start) |> List.min
+    
 let run v =
     let sw = System.Diagnostics.Stopwatch.StartNew()
     printfn $"day {day}"
@@ -86,12 +122,20 @@ humidity-to-location map:
     let testInput = stestInput |> multiLineToList |> parse
     
     if v then
+        verifyq (overlap (range 1 3) (range 4 6)) (None, [(range 1 3)])
+        verifyq (overlap (range 1 4) (range 4 6)) (Some (range 4 4), [(range 1 3)])
+        verifyq (overlap (range 1 5) (range 4 6)) (Some (range 4 5), [(range 1 3)])
+        verifyq (overlap (range 1 6) (range 4 6)) (Some (range 4 6), [range 1 3])
+        verifyq (overlap (range 1 8) (range 4 6)) (Some (range 4 6), [(range 1 3); (range 7 8)])
+        verifyq (overlap (range 5 6) (range 4 6)) (Some (range 5 6), [])
+        verifyq (overlap (range 5 8) (range 4 6)) (Some (range 5 6), [range 7 8])
+        verifyq (overlap (range 7 8) (range 4 6)) (None, [range 7 8])
         verify (resultA testInput) 35
     let input = (inputLines day) |> parse
     verify (resultA input) 340994526L
-    //
-    // if v then
-    //     verify (resultB testInput) 30
-    // verify (resultB input) 13114317
+    
+    if v then
+        verify (resultB testInput) 46
+    verify (resultB input) 52210644
     
     printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

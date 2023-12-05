@@ -7,6 +7,9 @@ let verify actual expected =
         printfn $"OK {actual}"
     else
         printfn $"FAIL {actual} != {expected}"
+let verifyq actual expected =
+    if actual <> expected then
+        printfn $"FAIL {actual} != {expected}"
 let filename no = if no < 10 then $"../../../Input/input0{no}" else $"../../../Input/input{no}"
 
 let inputLine no = System.IO.File.ReadAllText(filename no).Trim()
@@ -55,3 +58,9 @@ let split2 (c:char) (s:string) =
     | _ -> failwithf $"Could not split {s} into two"
 
 let split2space = split2 ' '
+
+let splitInt (s:string) =
+    s.Split(' ', StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries) |> List.ofArray |> List.map int
+
+let splitInt64 (s:string) =
+    s.Split(' ', StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries) |> List.ofArray |> List.map int64

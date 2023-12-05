@@ -4,6 +4,7 @@ Day01.run false
 Day02.run false
 Day03.run false
 Day04.run false
+Day05.run true
 // Day06.run true
 // Day07.run true
 // Day08.run true

@@ -12,7 +12,23 @@ let filename no = if no < 10 then $"../../../Input/input0{no}" else $"../../../I
 let inputLine no = System.IO.File.ReadAllText(filename no).Trim()
 let inputLines no = System.IO.File.ReadAllLines(filename no) |> List.ofArray
 
-let multiLineToList (s:string) = s.Split(System.Environment.NewLine) |> List.ofArray |> List.filter (fun x -> not (System.String.IsNullOrWhiteSpace(x)))
+let isBlank (s:string) = String.IsNullOrWhiteSpace(s)
+
+let multiLineToList (s:string) =
+    s.Split(Environment.NewLine) |> List.ofArray |> List.skipWhile isBlank |> List.rev |> List.skipWhile isBlank |> List.rev
+
+let chunkLines (lines:string list) =
+    let rec loop acc rest =
+        match rest with
+        | [] -> List.rev acc
+        | _ ->
+            let chunk, rest = match rest |> List.tryFindIndex isBlank with
+                                | Some blankIndex ->
+                                    rest |> List.splitAt blankIndex
+                                | None ->
+                                    rest, []
+            loop (chunk :: acc) (rest |> List.skipWhile isBlank)
+    loop [] lines
 
 let digit n d =
     (n / (pown 10 d)) % 10

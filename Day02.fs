@@ -22,7 +22,7 @@ let parseGame (line:string) =
                     | _ -> failwithf $"invalid {scol}"
         color, count
     let parseHand (shand:string) =
-        let h = shand.Split(',', opts) |> Array.map ((fun sh -> sh.Trim()) >> parseColorCount) |> Map.ofArray
+        let h = shand.Split(',', opts) |> Array.map (_.Trim() >> parseColorCount) |> Map.ofArray
         Hand h
     Game (gameNo, shands.Split(';', opts) |> List.ofArray|> List.map parseHand)
 let parseInput = List.map parseGame

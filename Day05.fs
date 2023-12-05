@@ -1,5 +1,4 @@
 ﻿module aoc_2023.Day05
-open System
 open Utility
 let day = 5
 
@@ -31,6 +30,7 @@ let range s e =
     { Start = s; End = e }
 let translate delta r = { Start = r.Start + delta; End = r.End + delta }
 let sourceRange mp = { Start = mp.Source; End = mp.Source + mp.Length - 1L }
+
 let overlap (r:Range) (mr:Range) =
     if r.Start < mr.Start then
         if r.End < mr.Start then
@@ -48,15 +48,15 @@ let overlap (r:Range) (mr:Range) =
         None, [r]
 
 let mapOne (mr:MappingPart) (rs:Range list) =
-    let rec loop acc rs =
+    let rec loop (accMapped, accUnmapped) rs =
         match rs with
-        | [] -> acc
+        | [] -> accMapped, accUnmapped
         | r :: rs ->
             let overlap, remainder = overlap r (sourceRange mr)
             let mapped = match overlap with
-                            | Some overlap -> (translate (mr.Destination - mr.Source) overlap) :: fst acc
-                            | None -> fst acc
-            let unmapped = remainder @ snd acc
+                            | Some overlap -> (translate (mr.Destination - mr.Source) overlap) :: accMapped
+                            | None -> accMapped
+            let unmapped = remainder @ accUnmapped
             loop (mapped, unmapped) rs
     loop ([], []) rs
 
@@ -70,15 +70,16 @@ let map (rs:Range list) (m:Mapping) =
             loop (mapped @ acc) mrs unmapped
     loop [] m.MappingParts rs
 
+let result seedRanges mappings =
+    mappings |> List.fold map seedRanges |> List.map _.Start |> List.min
+    
 let resultA (Seeds seeds, mappings: Mapping list) =
-    let folder = map
     let seedRanges = seeds |> List.map (fun s -> range s s)
-    mappings |> List.fold folder seedRanges |>List.map (fun r -> r.Start) |> List.min
+    result seedRanges mappings
     
 let resultB (Seeds seeds, mappings: Mapping list) =
-    let folder = map
     let seedRanges = [for i in 0..2..seeds.Length-1 -> range seeds[i] (seeds[i] + seeds[i+1] - 1L)]
-    mappings |> List.fold folder seedRanges |> List.map (fun r -> r.Start) |> List.min
+    result seedRanges mappings
     
 let run v =
     let sw = System.Diagnostics.Stopwatch.StartNew()
@@ -132,7 +133,7 @@ humidity-to-location map:
         verifyq (overlap (range 7 8) (range 4 6)) (None, [range 7 8])
         verify (resultA testInput) 35
     let input = (inputLines day) |> parse
-    verify (resultA input) 340994526L
+    verify (resultA input) 340994526
     
     if v then
         verify (resultB testInput) 46

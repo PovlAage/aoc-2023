@@ -41,8 +41,7 @@ let resultB games =
     games |> List.sumBy (minBag >> power)
 
 let run v =
-    let sw = System.Diagnostics.Stopwatch.StartNew()
-    printfn $"day {day}"
+    use _ = measureElapsed day
     
     let stestInput = """
 Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
@@ -64,5 +63,3 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
 
     let input = inputLines day |> parseInput 
     verify (resultB input) 59795
-
-    printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

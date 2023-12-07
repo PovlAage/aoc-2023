@@ -20,8 +20,7 @@ let countWaysToWin (Race (time, record)) =
 let result = List.map countWaysToWin >> List.reduce (*)
     
 let run v =
-    let sw = System.Diagnostics.Stopwatch.StartNew()
-    printfn $"day {day}"
+    use _ = measureElapsed day
     
     if v then
         let testInput = [Race(7, 9) ; Race(15, 40) ; Race(30, 200)]
@@ -42,5 +41,3 @@ let run v =
         verifyq (result testInputB) 71503
     let inputB = [Race (52947594, 426137412791216L)]
     verify (result inputB) 33149631
-    
-    printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

@@ -82,8 +82,7 @@ let resultB (Seeds seeds, mappings: Mapping list) =
     result seedRanges mappings
     
 let run v =
-    let sw = System.Diagnostics.Stopwatch.StartNew()
-    printfn $"day {day}"
+    use _ = measureElapsed day
     
     let stestInput = """
 seeds: 79 14 55 13
@@ -138,5 +137,3 @@ humidity-to-location map:
     if v then
         verify (resultB testInput) 46
     verify (resultB input) 52210644
-    
-    printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

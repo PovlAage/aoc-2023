@@ -60,8 +60,7 @@ let resultB input =
     gearsWithNeighbours |> List.sumBy (List.reduce (*))
 
 let run v =
-    let sw = System.Diagnostics.Stopwatch.StartNew()
-    printfn $"day {day}"
+    use _ = measureElapsed day
     
     let stestInput = """
 467..114..
@@ -86,5 +85,3 @@ let run v =
         verify (resultB testInput) 467835
 
     verify (resultB input) 73646890
-    
-    printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

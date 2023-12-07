@@ -33,8 +33,7 @@ let parse lines =
     lines |> List.map parseLine
 
 let run v =
-    let sw = System.Diagnostics.Stopwatch.StartNew()
-    printfn $"day {day}"
+    use _ = measureElapsed day
     
     let stestInput = """
 Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
@@ -53,5 +52,3 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
     if v then
         verify (resultB testInput) 30
     verify (resultB input) 13114317
-    
-    printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

@@ -35,8 +35,7 @@ let resultB lines =
     lines |> List.sumBy cvalue
 
 let run v =
-    let sw = System.Diagnostics.Stopwatch.StartNew()
-    printfn $"day {day}"
+    use _ = measureElapsed day
     
     if v then
         let testInput = """
@@ -63,5 +62,3 @@ zoneight234
         verify (resultB (multiLineToList testInput)) 281
     
     verify (resultB input) 56324
-
-    printfn $"day {day} elapsed {sw.ElapsedMilliseconds} ms"

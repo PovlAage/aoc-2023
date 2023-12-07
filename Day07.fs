@@ -10,11 +10,10 @@ type HandType =
     | TwoPair = 3
     | OnePair = 2
     | High = 1
-type Bid = int
 type Card = Card of int
 type Hand = { HandType: HandType; Cards: Card list; Bid: int }
 
-let parseCard = function
+let parseCardA = function
     | 'A' -> Card 14
     | 'K' -> Card 13
     | 'Q' -> Card 12
@@ -26,7 +25,7 @@ let parseCard = function
 let classify descendingCounts =
     match descendingCounts with
     | [5] -> HandType.FiveKind
-    | [4;_] -> HandType.FourKind
+    | [4;1] -> HandType.FourKind
     | [3;2] -> HandType.FullHouse
     | [3;1;1] -> HandType.ThreeKind
     | [2;2;1] -> HandType.TwoPair
@@ -34,34 +33,34 @@ let classify descendingCounts =
     | [1;1;1;1;1] -> HandType.High
     | _ -> failwithf $"Unmatched descendingCounts {descendingCounts}"
 
-let countDescending = List.groupBy id >> List.map (snd >> _.Length) >> List.sortDescending
+let countDescendingA = List.groupBy id >> List.map (snd >> _.Length) >> List.sortDescending
 
-let parseHandA (s:string) =
+let parse parser counter (s:string) =
     let scards, sbid = split2space s
-    let cards = scards.ToCharArray() |> Array.map parseCard |> List.ofArray
-    { HandType = classify (countDescending cards); Cards = cards; Bid = int sbid }
+    let cards = scards.ToCharArray() |> Array.map parser |> List.ofArray
+    { HandType = classify (counter cards); Cards = cards; Bid = int sbid }
 
-let parseHandB (s:string) =
-    let parseCardB = parseCard >> (fun c -> if c = Card 11 then Card 1 else c)
-    let scards, sbid = split2space s
-    let cards = scards.ToCharArray() |> Array.map parseCardB |> List.ofArray
-    let jokers, notJokers = cards |> List.partition (fun c -> c = Card 1)
-    let descendingCounts = match countDescending notJokers with
-                            | head :: rest -> (head + jokers.Length) :: rest
-                            | [] -> [5]
-    { HandType = classify descendingCounts; Cards = cards; Bid = int sbid }
+let parseHandA = parse parseCardA countDescendingA
 
-let compare hand1 hand2 =
-    if hand1.HandType <> hand2.HandType then
-        hand1.HandType.CompareTo(hand2.HandType)
-    else
-        let firstDifferentCard = Seq.zip hand1.Cards hand2.Cards |> Seq.tryFind (fun x -> fst x <> snd x)
-        match firstDifferentCard with
-        | Some (Card c1, Card c2) -> c1.CompareTo(c2)
-        | None -> 0
+let parseHandB =
+    let countDescendingB cards =
+        let jokers, notJokers = cards |> List.partition ((=) (Card 1))
+        match countDescendingA notJokers with
+        | head :: rest -> (head + jokers.Length) :: rest
+        | [] -> [5]
+    parse (parseCardA >> (fun c -> if c = Card 11 then Card 1 else c)) countDescendingB
+
+let compareHands hand1 hand2 =
+    match hand1.HandType.CompareTo(hand2.HandType) with
+    | 0 ->
+        Seq.zip hand1.Cards hand2.Cards |>
+        Seq.map (fun (Card c1, Card c2) -> c1.CompareTo(c2)) |>
+        Seq.tryFind ((<>) 0) |>
+        Option.defaultValue 0
+    | c -> c
 
 let result (hands:Hand list) =
-    hands |> List.sortWith compare |> Seq.indexed |> Seq.sumBy (fun (rank, hand) -> (rank + 1) * hand.Bid)
+    hands |> List.sortWith compareHands |> Seq.indexed |> Seq.sumBy (fun (index, hand) -> (index + 1) * hand.Bid)
 
 let run v =
     use _ = measureElapsed day

@@ -64,3 +64,7 @@ let splitInt (s:string) =
 
 let splitInt64 (s:string) =
     s.Split(' ', StringSplitOptions.TrimEntries ||| StringSplitOptions.RemoveEmptyEntries) |> List.ofArray |> List.map int64
+
+let measureElapsed day =
+    let sw = System.Diagnostics.Stopwatch.StartNew()
+    { new IDisposable with member x.Dispose() = printfn $"Day {day}: {sw.ElapsedMilliseconds} ms" }

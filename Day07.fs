@@ -14,6 +14,15 @@ type Bid = int
 type Card = Card of int
 type Hand = { HandType: HandType; Cards: Card list; Bid: int }
 
+let parseCard = function
+    | 'A' -> Card 14
+    | 'K' -> Card 13
+    | 'Q' -> Card 12
+    | 'J' -> Card 11
+    | 'T' -> Card 10
+    | c when '2' <= c && c <= '9' -> Card (int (c - '0'))
+    | c -> failwithf $"Unmatched card {c}"
+
 let classify descendingCounts =
     match descendingCounts with
     | [5] -> HandType.FiveKind
@@ -25,36 +34,22 @@ let classify descendingCounts =
     | [1;1;1;1;1] -> HandType.High
     | _ -> failwithf $"Unmatched descendingCounts {descendingCounts}"
 
+let countDescending = List.groupBy id >> List.map (snd >> _.Length) >> List.sortDescending
+
 let parseHandA (s:string) =
-    let parseCard = function
-    | 'A' -> Card 14
-    | 'K' -> Card 13
-    | 'Q' -> Card 12
-    | 'J' -> Card 11
-    | 'T' -> Card 10
-    | c when '2' <= c && c <= '9' -> Card (int (c - '0'))
-    | c -> failwithf $"Unmatched card {c}"
     let scards, sbid = split2space s
     let cards = scards.ToCharArray() |> Array.map parseCard |> List.ofArray
-    let counts = cards |> List.groupBy id |> List.map (snd >> _.Length) |> List.sortDescending
-    { HandType = classify counts; Cards = cards; Bid = int sbid }
+    { HandType = classify (countDescending cards); Cards = cards; Bid = int sbid }
 
 let parseHandB (s:string) =
-    let parseCard = function
-    | 'A' -> Card 14
-    | 'K' -> Card 13
-    | 'Q' -> Card 12
-    | 'J' -> Card 1
-    | 'T' -> Card 10
-    | c when '2' <= c && c <= '9' -> Card (int (c - '0'))
-    | c -> failwithf $"Bad card {c}"
+    let parseCardB = parseCard >> (fun c -> if c = Card 11 then Card 1 else c)
     let scards, sbid = split2space s
-    let cards = scards.ToCharArray() |> Array.map parseCard |> List.ofArray
+    let cards = scards.ToCharArray() |> Array.map parseCardB |> List.ofArray
     let jokers, notJokers = cards |> List.partition (fun c -> c = Card 1)
-    let counts = match notJokers |> List.groupBy id |> List.map (snd >> _.Length) |> List.sortDescending with
-                    | head :: rest -> (head + jokers.Length) :: rest
-                    | [] -> [5]
-    { HandType = classify counts; Cards = cards; Bid = int sbid }
+    let descendingCounts = match countDescending notJokers with
+                            | head :: rest -> (head + jokers.Length) :: rest
+                            | [] -> [5]
+    { HandType = classify descendingCounts; Cards = cards; Bid = int sbid }
 
 let compare hand1 hand2 =
     if hand1.HandType <> hand2.HandType then

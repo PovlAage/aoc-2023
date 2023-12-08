@@ -68,3 +68,19 @@ let splitInt64 (s:string) =
 let measureElapsed day =
     let sw = System.Diagnostics.Stopwatch.StartNew()
     { new IDisposable with member x.Dispose() = printfn $"Day {day}: {sw.ElapsedMilliseconds} ms" }
+
+let rec gcd a b =
+    match a, b with
+    | _ when a < 0 || b < 0 -> gcd (abs a) (abs b)
+    | _, 0 -> a
+    | _ when a < b -> gcd b a
+    | _ -> gcd b (a % b)    
+let rec gcd64 (a:int64) (b:int64) =
+    match a, b with
+    | _ when a < 0 || b < 0 -> gcd64 (abs a) (abs b)
+    | _, 0L -> a
+    | _ when a < b -> gcd64 b a
+    | _ -> gcd64 b (a % b)    
+
+let lcm a b = (abs a) * ((abs b) / gcd a b)
+let lcm64 (a:int64) (b:int64) = (abs a) * ((abs b) / gcd64 a b)

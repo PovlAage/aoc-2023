@@ -16,6 +16,7 @@
         <Content Include="Input\input05" />
         <Content Include="Input\input06" />
         <Content Include="Input\input07" />
+        <Content Include="Input\input08" />
         <Compile Include="Utility.fs" />
         <Compile Include="Day01.fs" />
         <Compile Include="Day02.fs" />

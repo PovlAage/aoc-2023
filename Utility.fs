@@ -1,5 +1,5 @@
 module aoc_2023.Utility
-
+open Checked
 open System
 
 let verify actual expected =

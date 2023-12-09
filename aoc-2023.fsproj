@@ -17,6 +17,7 @@
         <Content Include="Input\input06" />
         <Content Include="Input\input07" />
         <Content Include="Input\input08" />
+        <Content Include="Input\input09" />
         <Compile Include="Utility.fs" />
         <Compile Include="Day01.fs" />
         <Compile Include="Day02.fs" />
@@ -26,6 +27,7 @@
         <Compile Include="Day06.fs" />
         <Compile Include="Day07.fs" />
         <Compile Include="Day08.fs" />
+        <Compile Include="Day09.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

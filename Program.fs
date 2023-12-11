@@ -9,4 +9,5 @@ Day06.run false
 Day07.run false
 Day08.run false
 Day09.run false
-Day10.run true
+Day10.run false
+Day11.run true

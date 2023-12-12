@@ -12,7 +12,16 @@ let parseLine line =
 let parse = List.map parseLine
 
 let cache = Dictionary<_, _>()
-let rec countCombinations (springs:string, groups:int list) =
+
+let groupsAsKey groups =
+    let hex = function
+        | i when 1 <= i && i <= 9 -> string(i)[0]
+        | i when 10 <= i && i <= 15 -> 'a' + char(i - 10)
+        | i -> failwithf $"Unmatched {i}"
+    groups |> List.map hex |> Array.ofList |> String
+let rec countCombinations (springs:string, groups:int list, groupsKey:string) =
+    let springs = springs.Trim('.')
+
     let isPossibleUndamaged i = springs[i] <> '#'
     let isPossibleDamaged i = springs[i] <> '.'
     let tryExcise len index =
@@ -36,10 +45,12 @@ let rec countCombinations (springs:string, groups:int list) =
         if springs.IndexOf('#') = -1 then 1L else 0L
     elif String.IsNullOrEmpty springs then
         0L
-    elif springs.IndexOf('#') = -1 && springs.IndexOf('?') = -1 then
+    elif List.sum groups + List.length groups - 1 > springs.Length then
+        0L
+    elif List.sum groups > springs.Replace(".", "").Length then
         0L
     else
-        let cacheKey = springs, groups
+        let cacheKey = springs + groupsKey
         let isCached, value = cache.TryGetValue cacheKey
         if isCached then
             value
@@ -47,15 +58,16 @@ let rec countCombinations (springs:string, groups:int list) =
             let pivotIndex, pivotValue = groups |> Seq.indexed |> Seq.maxBy snd
             match groups |> List.splitAt pivotIndex with
             | lower, _ :: upper ->
+                let lowerKey, upperKey = groupsKey.Substring(0, pivotIndex), groupsKey.Substring(pivotIndex + 1)
                 let value =
                     {0..(springs.Length-pivotValue)} |>
                     Seq.choose (tryExcise pivotValue) |>
-                    Seq.sumBy (fun (l, u) -> (countCombinations (l, lower) * countCombinations (u, upper)))
+                    Seq.sumBy (fun (l, u) -> (countCombinations (l, lower, lowerKey) * countCombinations (u, upper, upperKey)))
                 cache.Add (cacheKey, value)
                 value
             | x -> failwithf $"Unmatched {x}"
         
-let resultA = List.sumBy countCombinations
+let resultA = List.sumBy (fun (a, b) -> countCombinations (a, b, groupsAsKey b))
 
 let unfold (springs:string, groups:int list) =
     (String.Join('?', List.replicate 5 springs), List.replicate 5 groups |> List.concat)

@@ -1,4 +1,5 @@
 ﻿module aoc_2023.Day12
+open System
 open System.Collections.Generic
 open Utility
 let day = 12
@@ -14,55 +15,52 @@ let cache = Dictionary<_, _>()
 let rec countCombinations (springs:string, groups:int list) =
     let isPossibleUndamaged i = springs[i] <> '#'
     let isPossibleDamaged i = springs[i] <> '.'
-    let isPossible len index =
+    let tryExcise len index =
         assert (index + len <= springs.Length)
-        (index = 0 || isPossibleUndamaged (index - 1)) &&
-        [index..(index+len-1)] |> List.forall isPossibleDamaged &&
-        (index + len = springs.Length || isPossibleUndamaged (index + len))
-    let excise len index =
-        assert (index + len <= springs.Length)
-        if index = 0 then
-            if len = springs.Length then
-                "", ""
-            else
-                assert isPossibleUndamaged len
-                "", springs.Substring(len + 1)
-        elif index + len < springs.Length then
-            assert isPossibleUndamaged (index - 1)
-            assert isPossibleUndamaged (index + len)
-            springs.Substring(0, index - 1), springs.Substring(index + len + 1)
+        if not ((index = 0 || isPossibleUndamaged (index - 1)) &&
+               {index..(index+len-1)} |> Seq.forall isPossibleDamaged &&
+               (index + len = springs.Length || isPossibleUndamaged (index + len))) then
+            None
         else
-            assert isPossibleUndamaged (index - 1)
-            springs.Substring(0, index - 1), ""
+            if index = 0 then
+                if len = springs.Length then
+                    Some (String.Empty, String.Empty)
+                else
+                    Some (String.Empty, springs.Substring(len + 1))
+            elif index + len < springs.Length then
+                Some (springs.Substring(0, index - 1), springs.Substring(index + len + 1))
+            else
+                Some (springs.Substring(0, index - 1), String.Empty)
 
     if List.isEmpty groups then
         if springs.IndexOf('#') = -1 then 1L else 0L
-    elif System.String.IsNullOrEmpty springs then
+    elif String.IsNullOrEmpty springs then
         0L
     elif springs.IndexOf('#') = -1 && springs.IndexOf('?') = -1 then
         0L
     else
-        let cacheKey = springs + System.String.Join(";", groups)
+        let cacheKey = springs, groups
         let isCached, value = cache.TryGetValue cacheKey
         if isCached then
             value
         else
-            let pivotIndex, pivotValue = groups |> List.indexed |> List.maxBy snd
-            let lower, (_ :: upper) = groups |> List.splitAt pivotIndex
-            let value =
-                [0..(springs.Length-pivotValue)] |>
-                List.filter (isPossible pivotValue) |>
-                List.map (fun i -> excise pivotValue i) |>
-                List.sumBy (fun (l, u) -> (countCombinations (l, lower) * countCombinations (u, upper)))
-            cache.Add (cacheKey, value)
-            value
+            let pivotIndex, pivotValue = groups |> Seq.indexed |> Seq.maxBy snd
+            match groups |> List.splitAt pivotIndex with
+            | lower, _ :: upper ->
+                let value =
+                    {0..(springs.Length-pivotValue)} |>
+                    Seq.choose (tryExcise pivotValue) |>
+                    Seq.sumBy (fun (l, u) -> (countCombinations (l, lower) * countCombinations (u, upper)))
+                cache.Add (cacheKey, value)
+                value
+            | x -> failwithf $"Unmatched {x}"
         
-let resultA lines = lines |> List.sumBy countCombinations
+let resultA = List.sumBy countCombinations
 
-let resultB lines =
-    let unfold (springs:string, groups:int list) =
-        (System.String.Join('?', List.replicate 5 springs), List.replicate 5 groups |> List.concat)
-    lines |> List.map unfold |> resultA
+let unfold (springs:string, groups:int list) =
+    (String.Join('?', List.replicate 5 springs), List.replicate 5 groups |> List.concat)
+let resultB = List.map unfold >> resultA
+
 let run v =
     use _ = measureElapsed day
     

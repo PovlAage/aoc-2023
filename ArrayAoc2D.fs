@@ -1,7 +1,20 @@
-module aoc_2023.ArrayAoc2D
+module ArrayAoc2D
 open Checked
 
+[<Struct>]
 type Point = Point of int*int
+
+type Direction =
+    | Up
+    | Down
+    | Left
+    | Right
+
+let delta = function
+    | Up -> (0, -1)
+    | Down -> (0, 1)
+    | Left -> (-1, 0)
+    | Right -> (1, 0)
 
 let dims arr =
     Array2D.length1 arr, Array2D.length2 arr

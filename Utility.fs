@@ -84,3 +84,5 @@ let rec gcd64 (a:int64) (b:int64) =
 
 let lcm a b = (abs a) * ((abs b) / gcd a b)
 let lcm64 (a:int64) (b:int64) = (abs a) * ((abs b) / gcd64 a b)
+
+let charEnum<'E when 'E : enum<char>> c = Microsoft.FSharp.Core.LanguagePrimitives.EnumOfValue<char, 'E>(c)

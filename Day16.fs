@@ -18,7 +18,7 @@ let parse = lines2array >> Array2D.map charEnum
 let rec affectedRec arr (acc:Set<Point>) (Point (x, y)) d =
     let dx, dy = delta d
     let pnext = Point (x + dx, y + dy)
-    if not (inBounds arr pnext) then
+    if not (isInBounds arr pnext) then
         acc, None
     else
         let acc = acc |> Set.add pnext

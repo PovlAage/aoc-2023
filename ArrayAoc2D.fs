@@ -9,13 +9,13 @@ type Direction =
     | Down
     | Left
     | Right
-
+let allDirections = [Up; Down; Left; Right]
 let delta = function
     | Up -> (0, -1)
     | Down -> (0, 1)
     | Left -> (-1, 0)
     | Right -> (1, 0)
-
+let add (Point (x, y)) (dx, dy) = Point (x + dx, y + dy)
 let dims arr =
     Array2D.length1 arr, Array2D.length2 arr
 
@@ -30,4 +30,4 @@ let lines2array (lines:string list) =
     let lx, ly = lines[0].Length, lines.Length
     Array2D.init lx ly (fun x y -> lines[y][x])
 
-let inBounds arr (Point (x, y)) = 0 <= x && x < Array2D.length1 arr && 0 <= y && y < Array2D.length2 arr
+let isInBounds arr (Point (x, y)) = 0 <= x && x < Array2D.length1 arr && 0 <= y && y < Array2D.length2 arr

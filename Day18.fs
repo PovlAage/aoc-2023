@@ -81,7 +81,8 @@ let dig lines =
         let xr, yr = (x2 + (y2 - y1), y2 - (x2 - x1))
         if arr[xl, yl] = 0 then arr[xl, yl] <- 2
         if arr[xr, yr] = 0 then arr[xr, yr] <- 3
-    floodFill arr 0 [2; 3]
+    floodFill arr 0 2
+    floodFill arr 0 3
     let inner = if arr[0, 0] = 2 then 3 else 2
     arr |> Array2D.iteri (fun x y c -> arr[x, y] <- if c = inner || c = 1 then (int64 xsteps[x]) * (int64 ysteps[y]) else 0L)
     arr

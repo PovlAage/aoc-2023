@@ -47,19 +47,21 @@ let isInBounds arr p =
     let dims = dims2 arr
     dims.IsInbounds(p)
 
-let floodFill arr blank sources =
-    // flood fill from V/H frontier while progress is made
+let floodFill arr blank colour =
+    // flood fill from sources while progress is made
     let dims = dims2 arr
     let neighbours = allDirections |> List.map delta
-    let mutable progress = true
-    while progress do
-        let flood x y c =
-            if List.contains c sources then
-                let blankNeighbours =
-                    neighbours |>
-                    List.map (add (Point (x, y))) |>
-                    List.filter (fun (Point (xx, yy)) -> dims.IsInbounds(Point(xx, yy)) && arr[xx, yy] = blank)
-                for Point (xx, yy) in blankNeighbours do arr[xx, yy] <- c
-                if not blankNeighbours.IsEmpty then progress <- true 
-        progress <- false
-        arr |> Array2D.iteri flood
+    let rec loop frontier =        
+        let blankNeighbours p =
+            neighbours |>
+            List.map (add p) |>
+            List.filter (fun (Point (xx, yy)) -> dims.IsInbounds(Point(xx, yy)) && arr[xx, yy] = blank)
+        let newFrontier = frontier |> List.collect blankNeighbours |> List.distinct
+        if not (List.isEmpty newFrontier) then
+            for (Point (xx, yy)) in newFrontier do arr[xx, yy] <- colour
+            loop newFrontier
+    let initialFrontier = [for x in dims.XBase..dims.XMax do
+                           for y in dims.YBase..dims.YMax do
+                           let p = Point (x, y)
+                           if arr[x, y] = colour then yield p]
+    loop initialFrontier

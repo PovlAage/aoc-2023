@@ -1,5 +1,6 @@
 ﻿module aoc_2023.Day10
 open Utility
+open ArrayAoc2D
 let day = 10
 type Direction =
     | North = 1
@@ -15,8 +16,6 @@ type Tile =
     | SouthEast = 'F'
     | Ground = '.'
     | Starting = 'S'
-type Point = Point of int * int
-let add (Point (x1, y1)) (Point (x2, y2)) = Point (x1 + x2, y1 + y2)
 let parseTile = function
     | '|' -> Tile.Vertical
     | '-' -> Tile.Horizontal
@@ -94,14 +93,10 @@ let resultB (s, arr) =
     let pipe = walkPipe arr [(s, d)] (p, d)
     let X, Y = (Array2D.length1 arr), (Array2D.length2 arr)
     let arrPaint = Array2D.create X Y '.'
-    let mutable countV = 0
-    let mutable countH = 0
-    // all painting done with this helper, to get correct count
+
     let paint (Point (x, y)) c =
         if arrPaint[x, y] = '.' then
             arrPaint[x, y] <- c
-            if c = 'V' then countV <- countV + 1
-            if c = 'H' then countH <- countH + 1
     
     // paint pipe
     for p, _ in pipe do
@@ -117,26 +112,16 @@ let resultB (s, arr) =
             | Direction.North -> [(-1, -1); (-1, 0); (-1, 1)], [(1, -1); (1, 0); (1, 1)]
             | Direction.South -> [(1, -1); (1, 0); (1, 1)], [(-1, -1); (-1, 0); (-1, 1)]
             | _ -> failwithf $"Unmatched {d}"
-        for px, py in leftPoints do paint (add p (Point (px, py))) 'V'
-        for px, py in rightPoints do paint (add p (Point (px, py))) 'H'
+        for l in leftPoints do paint (add p l) 'V'
+        for r in rightPoints do paint (add p r) 'H'
 
-    // flood fill from V/H frontier while progress is made
-    let neighbours = [Point (-1, 0); Point(1, 0); Point(0, -1); Point(0, 1)]
-    let mutable progress = true
-    while progress do
-        let flood x y c =
-            if c = 'V' || c = 'H' then
-                let clearNeighbours =
-                    neighbours |>
-                    List.map (add (Point (x, y))) |>
-                    List.filter (fun (Point (xx, yy)) -> xx >= 0 && yy >= 0 && xx < X && yy < Y && arrPaint[xx, yy] = '.')
-                for pn in clearNeighbours do paint pn c
-                paint (Point (x, y)) (if c = 'V' then 'v' else 'h') // optimization: avoid revisiting these
-                if not clearNeighbours.IsEmpty then progress <- true 
-        progress <- false
-        arrPaint |> Array2D.iteri flood
+    floodFill arrPaint '.' 'V'
+    floodFill arrPaint '.' 'H'
 
     // top left corner is outer, so inner is its complement
+    let mutable countV = 0
+    let mutable countH = 0
+    arrPaint |> Array2D.iteri (fun x y c -> if c = 'V' then countV <- countV + 1 elif c = 'H' then countH <- countH + 1)
     if arrPaint[0, 0].ToString().ToLower() = "h" then countV else countH
 
 let run v =

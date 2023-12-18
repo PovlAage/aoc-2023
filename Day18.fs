@@ -4,6 +4,7 @@ open ArrayAoc2D
 let day = 18
 type Color = Color of string
 type Line = Line of Direction * int
+type DigPlanSteps = DigPlanSteps of (int list) * (int list)
 let reLine = System.Text.RegularExpressions.Regex(@"^(?<direction>[UDRL]) (?<distance>\d+) \(#(?<color>[0-9a-f]{6})\)$")
 let parseLineA line =
     let m = reLine.Match(line)
@@ -38,36 +39,57 @@ let parseA = List.map parseLineA
 let parseB = List.map parseLineB
 
 let move point direction distance =
-    let delta = delta direction
-    [1..distance] |> List.map (addTimes point delta)
-let traverse lines p =
-    let folder points (line:Line) =
+    addTimes point (delta direction) distance
+let getTurningPoints lines p =
+    let folder p (line:Line) =
          let (Line (direction, distance)) = line
-         (move (List.last points) direction distance)
-    lines |> List.scan folder [p]
+         move p direction distance
+    lines |> List.scan folder p
 let dig lines =
-    let points = traverse lines (Point (0, 0)) |> List.concat
-    let xs = points |> List.map px
-    let ys = points |> List.map py
-    let xbase, ybase = List.min xs - 1, List.min ys - 1
-    let xlen, ylen = List.max xs - xbase + 3, List.max ys - ybase + 3
-    let arr = Array2D.createBased xbase ybase xlen ylen 0
-    for (Point (x1, y1), Point (x2, y2)) in points |> List.pairwise do
+    let turningPoints = getTurningPoints lines (Point (0, 0))
+    let coordStats p =
+        let coords = turningPoints |> List.map p
+        let withOffset = List.append coords (coords |> List.map ((+) 1))
+        let distinctAndSorted = withOffset |> List.distinct |> List.sort
+        let withPadding = (List.head distinctAndSorted - 1) :: distinctAndSorted @ [List.last distinctAndSorted + 1]
+        let steps = withPadding |> List.pairwise |> List.map (fun (x1, x2) -> x2 - x1)
+        withPadding, steps
+    let xs, xsteps = coordStats px
+    let ys, ysteps = coordStats py
+    let arr = Array2D.create xs.Length ys.Length 0L
+    let trenchPointsFolder points (line:Line) =
+        let (Line (direction, distance)) = line
+        let (Point (ix, iy)) = List.last points
+        let dx, dy = delta direction
+        let rec loop acc (ix, iy) remainingDistance =
+            assert (remainingDistance >= 0)
+            if remainingDistance = 0 then
+                acc
+            else
+                let ix = ix + dx
+                let iy = iy + dy
+                assert (dx = 0 || dy = 0)
+                let stepDistance = if dx <> 0 then xsteps[ix] else ysteps[iy]
+                loop (Point(ix, iy) :: acc) (ix, iy) (remainingDistance - stepDistance)
+        List.rev (loop [] (ix, iy) distance)        
+    let ix0, iy0 = xs |> List.findIndex ((=) 0), ys |> List.findIndex ((=) 0)        
+    let trenchPoints = lines |> List.scan trenchPointsFolder [Point(ix0, iy0)] |> List.concat
+        
+    for Point (x1, y1), Point (x2, y2) in trenchPoints |> List.pairwise do
         arr[x2, y2] <- 1
         let xl, yl = (x2 - (y2 - y1), y2 + (x2 - x1))
         let xr, yr = (x2 + (y2 - y1), y2 - (x2 - x1))
         if arr[xl, yl] = 0 then arr[xl, yl] <- 2
         if arr[xr, yr] = 0 then arr[xr, yr] <- 3
     floodFill arr 0 [2; 3]
-    let inner = if arr[xbase, ybase] = 2 then 3 else 2
-    arr |> Array2D.iteri (fun x y c -> if c = inner then arr[x, y] <- 1)
+    let inner = if arr[0, 0] = 2 then 3 else 2
+    arr |> Array2D.iteri (fun x y c -> arr[x, y] <- if c = inner || c = 1 then (int64 xsteps[x]) * (int64 ysteps[y]) else 0L)
     arr
-    // flood fill, first paint left/right edge
     
 let result input =
     let arr = dig input
-    let mutable count = 0
-    arr |> Array2D.iter (fun c -> if c = 1 then count <- count + 1)
+    let mutable count = 0L
+    arr |> Array2D.iter (fun c -> count <- count + c)
     count
 
 let run v =
@@ -89,21 +111,14 @@ U 3 (#a77fa3)
 L 2 (#015232)
 U 2 (#7a21e3)
 """
-    // for l in testInput do
-    //     printfn $"{l}"
-    // for p in traverse testInput (Point (0, 0)) do
-    //     printfn $"{p}"
-    // let arr = dig testInput
-    // dump arr
     if v then
         let testInput = stestInput |> multiLineToList |> parseA
         verify (result testInput) 62
     let input = inputLines day |> parseA
     verify (result input) 62573
 
-    // if v then
-    //     let testInput = stestInput |> multiLineToList |> parseB
-    //     for l in testInput do
-    //         printfn $"{l}"
-    //     verify (result testInput) 0
-    
+    if v then
+        let testInput = stestInput |> multiLineToList |> parseB
+        verify (result testInput) 952408144115L
+    let input = inputLines day |> parseB
+    verify (result input) 54662804037719L

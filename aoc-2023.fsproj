@@ -26,6 +26,7 @@
         <Content Include="Input\input15" />
         <Content Include="Input\input16" />
         <Content Include="Input\input17" />
+        <Content Include="Input\input18" />
         <Compile Include="Utility.fs" />
         <Compile Include="ArrayAoc2D.fs" />
         <Compile Include="Day01.fs" />
@@ -45,6 +46,7 @@
         <Compile Include="Day15.fs" />
         <Compile Include="Day16.fs" />
         <Compile Include="Day17.fs" />
+        <Compile Include="Day18.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

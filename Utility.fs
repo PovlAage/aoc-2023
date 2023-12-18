@@ -86,3 +86,14 @@ let lcm a b = (abs a) * ((abs b) / gcd a b)
 let lcm64 (a:int64) (b:int64) = (abs a) * ((abs b) / gcd64 a b)
 
 let charEnum<'E when 'E : enum<char>> c = Microsoft.FSharp.Core.LanguagePrimitives.EnumOfValue<char, 'E>(c)
+
+let parseHex (s:string) =
+    let parseChar (c:char) =
+        if '0' <= c && c <= '9' then
+            int (c - '0')
+        elif 'a' <= c && c <= 'f' then
+            int (c - 'a') + 10
+        else
+            failwithf $"Unmatched {c}"
+    s.ToLower().ToCharArray() |> Array.indexed |> Array.sumBy (fun (i, c) -> let shift = 4 * (s.Length - 1 - i) in (parseChar c) <<< shift)
+ 

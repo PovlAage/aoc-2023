@@ -9,7 +9,7 @@ Day06.run false
 Day07.run false
 Day08.run false
 Day09.run false
-Day10.run true
+Day10.run false
 Day11.run false
 // Day12.run true
 Day13.run false
@@ -17,4 +17,6 @@ Day13.run false
 Day15.run false
 // Day16.run true
 // Day17.run false
-Day18.run true
+Day18.run false
+// Day19.run true
+Day20.run true

@@ -4,7 +4,7 @@ open Checked
 [<Struct>]
 type Point = Point of int*int
 type Dims =
-    { XBase: int; XMax: int; YBase: int; YMax: int }
+    { XBase: int; XMax: int; YBase: int; YMax: int; XLength: int; YLength: int }
     member this.IsInbounds (Point (x, y)) =
         this.XBase <= x && x <= this.XMax && this.YBase <= y && y <= this.YMax
 
@@ -29,7 +29,7 @@ let dims arr =
 let dims2 arr =
     let basex, basey = Array2D.base1 arr, Array2D.base2 arr
     let maxx, maxy = basex + Array2D.length1 arr - 1, basey + Array2D.length2 arr - 1
-    { XBase = basex; YBase = basey; XMax = maxx; YMax = maxy }
+    { XBase = basex; YBase = basey; XMax = maxx; YMax = maxy; XLength = Array2D.length1 arr; YLength = Array2D.length2 arr }
 
 let dump arr =
     let dims2 = dims2 arr

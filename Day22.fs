@@ -1,4 +1,5 @@
 ﻿module aoc_2023.Day22
+open System.Collections.Generic
 open Utility
 let day = 22
 type Point = { X: int; Y: int; Z: int }
@@ -56,20 +57,48 @@ let settle bricks =
         droppedBrick :: settled
     bricks |> List.sortBy zmin |> List.fold folder []
 
-let supportersMap input =
+let brick2supporters input =
     let settled = settle input
-    let supporters b =
+    let supportersFor b =
         let zmin = zmin b
         let isSupportedBy b2 =
             let relevantPoints = b2.Points |> List.filter (fun p -> p.Z + 1 = zmin)
             b2.Name <> b.Name && Seq.allPairs b.Points relevantPoints |> Seq.exists (fun (p1, p2) -> p1.X = p2.X && p1.Y = p2.Y && p1.Z = p2.Z + 1)
         settled |> List.filter (fun b2 -> b2.Points |> List.exists (fun p -> p.Z + 1 = zmin)) |> List.filter isSupportedBy |> List.map _.Name
-    settled |> Seq.map (fun b -> b.Name, supporters b) |> Map.ofSeq
+    settled |> Seq.map (fun b -> b.Name, supportersFor b) |> Map.ofSeq
 let resultA input =
-    let supportersMap = supportersMap input
-    let soleSupporters = supportersMap.Values |> Seq.filter (fun bs -> bs.Length = 1) |> Seq.map List.exactlyOne |> List.ofSeq |> List.distinct
-    supportersMap.Count - soleSupporters.Length
+    let brick2supporters = brick2supporters input
+    let soleSupporters = brick2supporters.Values |> Seq.filter (fun bs -> bs.Length = 1) |> Seq.map List.exactlyOne |> List.ofSeq |> List.distinct
+    input.Length - soleSupporters.Length
 
+[<TailCall>]
+let rec findRoots supportersMap (cache:Dictionary<_,_>) item =
+    let isCached, value = cache.TryGetValue item
+    if isCached then
+        value
+    else
+        let value =
+            match supportersMap |> Map.find item with
+            | [] -> Set.singleton item
+            | supporters -> supporters |> Seq.map (findRoots supportersMap cache) |> Set.unionMany
+        cache.Add(item, value)
+        value
+        
+let resultB input =
+    let brick2supporters = brick2supporters input
+    let cache = Dictionary<_, _>()
+    let brick2roots = input |> (List.map _.Name) |> Seq.map (fun n -> (n, findRoots brick2supporters cache n)) |> Map.ofSeq
+    let matchExactlyOne s =
+        if s |> Set.count = 1 then
+            Some (s |> Set.toSeq |> Seq.exactlyOne)
+        else
+            None
+    let soleRoots = brick2roots.Values |> Seq.choose matchExactlyOne |> Seq.distinct |> List.ofSeq
+    let reactionForRoot r = brick2roots |> Map.toSeq |> Seq.filter (fun (k, v) -> v.Count = 1 && v |> Seq.exactlyOne = r) |> Seq.length
+    let reactionCounts = soleRoots |> Seq.map (fun r -> r, reactionForRoot r)
+    let result = reactionCounts |> Seq.map snd |> Seq.max
+    result
+    
 // let resultB input =
 //     let supportersMap = supportersMap input
     
@@ -90,7 +119,7 @@ let run v =
         verify (resultA testInput) 5
     let input = inputLines day |> parse
     verify (resultA input) 515
-    //
-    // let steps = 26501365
-    
-    //
+
+    if v then
+        verify (resultB testInput) 7
+    verify (resultB input) 0 // 1392 is too low

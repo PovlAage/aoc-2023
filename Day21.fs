@@ -50,6 +50,6 @@ let run v =
     let input = inputLines day |> parse
     verify (resultA input 64) 3724
     
-    let steps = 26501365
+    // let steps = 26501365
     
     //

@@ -22,4 +22,5 @@ Day18.run false
 Day20.run true
 Day21.run true
 // Day22.run true
-Day23.run true
+// Day23.run true
+Day24.run true

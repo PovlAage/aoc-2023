@@ -81,6 +81,12 @@ let rec gcd64 (a:int64) (b:int64) =
     | _, 0L -> a
     | _ when a < b -> gcd64 b a
     | _ -> gcd64 b (a % b)    
+let rec gcdbig (a:bigint) (b:bigint) =
+    match a, b with
+    | _ when a < bigint.Zero || b < bigint.Zero -> gcdbig (abs a) (abs b)
+    | _, zero when zero = bigint.Zero -> a
+    | _ when a < b -> gcdbig b a
+    | _ -> gcdbig b (a % b)    
 
 let lcm a b = (abs a) * ((abs b) / gcd a b)
 let lcm64 (a:int64) (b:int64) = (abs a) * ((abs b) / gcd64 a b)
